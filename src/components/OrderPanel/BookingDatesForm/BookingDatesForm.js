@@ -4,7 +4,8 @@ import classNames from 'classnames';
 
 import appSettings from '../../../config/settings';
 import { FormattedMessage, useIntl } from '../../../util/reactIntl';
-import { required, bookingDatesRequired, composeValidators } from '../../../util/validators';
+import { required, bookingDatesRequired, bookingDatesMinNights, composeValidators } from '../../../util/validators';
+import { minBookingNights } from '../../../config/configListing';
 import {
   getStartOf,
   addTime,
@@ -751,7 +752,14 @@ export const BookingDatesForm = props => {
                     id: 'BookingDatesForm.requiredDate',
                   })
                 ),
-                bookingDatesRequired(startDateErrorMessage, endDateErrorMessage)
+                bookingDatesRequired(startDateErrorMessage, endDateErrorMessage),
+                bookingDatesMinNights(
+                  intl.formatMessage(
+                    { id: 'BookingDatesForm.minimumNights' },
+                    { minNights: minBookingNights }
+                  ),
+                  minBookingNights
+                )
               )}
               isDayBlocked={isDayBlocked}
               isOutsideRange={isOutsideRange}

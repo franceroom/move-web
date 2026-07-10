@@ -434,3 +434,7 @@ export const listingTypes = [
 // Read More:
 // https://www.sharetribe.com/docs/how-to/manage-search-schemas-with-flex-cli/#adding-listing-search-schemas
 export const enforceValidListingType = false;
+
+// MOVE (France Room) : nombre minimum de nuits par reservation (location au mois).
+// Utilise par le formulaire de reservation (validation) et par le serveur (line items).
+export const minBookingNights = 30;

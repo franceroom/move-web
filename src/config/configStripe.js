@@ -15,7 +15,10 @@ export const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 // If your marketplace is for US only, you should also be aware that available
 // time slots can only be fetched for 366 days into the future.
 // https://www.sharetribe.com/api-reference/marketplace.html#query-time-slots
-export const dayCountAvailableForBooking = 90;
+// MOVE (France Room) : location au mois — fenetre etendue a 12 mois.
+// ATTENTION Stripe : retention des fonds ~90 jours max apres le debit (comptes non-US).
+// Le debit ayant lieu a l'acceptation, arbitrer le timing de versement avant le live.
+export const dayCountAvailableForBooking = 365;
 
 /**
  * Default merchant category code (MCC)

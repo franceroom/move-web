@@ -29,6 +29,8 @@
 const express = require('express');
 
 const INTEGRATION_BASE = 'https://flex-integration-api.sharetribe.com';
+// L'authentification OAuth2 se fait sur le host API principal (pas le host Integration).
+const AUTH_BASE = 'https://flex-api.sharetribe.com';
 const CLIENT_ID = process.env.INTEGRATION_CLIENT_ID;
 const CLIENT_SECRET = process.env.INTEGRATION_CLIENT_SECRET;
 const SYNC_TOKEN = process.env.ICAL_SYNC_TOKEN;
@@ -53,7 +55,7 @@ const getToken = async () => {
     grant_type: 'client_credentials',
     scope: 'integ',
   });
-  const res = await fetch(`${INTEGRATION_BASE}/v1/auth/token`, {
+  const res = await fetch(`${AUTH_BASE}/v1/auth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,

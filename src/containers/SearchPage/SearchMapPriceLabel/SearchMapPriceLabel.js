@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { injectIntl, intlShape } from '../../../util/reactIntl';
 import { propTypes } from '../../../util/types';
 import { formatMoney } from '../../../util/currency';
+import { isNightlyUnitType, monthlyPriceFromNightly } from '../../../util/monthlyPrice';
 import { ensureListing } from '../../../util/data';
 import { isPriceVariationsEnabled } from '../../../util/configHelpers';
 
@@ -47,7 +48,11 @@ class SearchMapPriceLabel extends Component {
       config,
     } = this.props;
     const currentListing = ensureListing(listing);
-    const { price, publicData, title } = currentListing.attributes;
+    const { price: nightlyOrUnitPrice, publicData, title } = currentListing.attributes;
+    // MOVE : pins carte en prix mensuel pour les annonces "night"
+    const price = isNightlyUnitType(publicData?.unitType)
+      ? monthlyPriceFromNightly(nightlyOrUnitPrice)
+      : nightlyOrUnitPrice;
 
     // Create formatted price if currency is known or alternatively show just the unknown currency.
     const formattedPrice =

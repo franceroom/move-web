@@ -36,6 +36,7 @@ const passport = require('passport');
 
 const auth = require('./auth');
 const apiRouter = require('./apiRouter');
+const icalRouter = require('./icalRouter');
 const wellKnownRouter = require('./wellKnownRouter');
 const webmanifestResourceRoute = require('./resources/webmanifest');
 const robotsTxtRoute = require('./resources/robotsTxt');
@@ -226,6 +227,9 @@ app.use(passport.initialize());
 
 // Server-side routes that do not render the application
 app.use('/api', apiRouter);
+
+// MOVE (France Room) : synchronisation iCal (export .ics + import anti double-booking)
+app.use('/ical', icalRouter);
 
 const noCacheHeaders = {
   'Cache-control': 'no-cache, no-store, must-revalidate',

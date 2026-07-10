@@ -28,8 +28,9 @@
 
 const express = require('express');
 
-const INTEGRATION_BASE = 'https://flex-integration-api.sharetribe.com';
-// L'authentification OAuth2 se fait sur le host API principal (pas le host Integration).
+// Integration API et auth OAuth2 vivent sur le host API principal
+// (verifie le 10/07/2026 : flex-integration-api.sharetribe.com ne route plus l'API).
+const INTEGRATION_BASE = 'https://flex-api.sharetribe.com';
 const AUTH_BASE = 'https://flex-api.sharetribe.com';
 const CLIENT_ID = process.env.INTEGRATION_CLIENT_ID;
 const CLIENT_SECRET = process.env.INTEGRATION_CLIENT_SECRET;

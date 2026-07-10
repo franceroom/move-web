@@ -40,6 +40,8 @@ import { ModalInMobile, PrimaryButton, AvatarSmall, H1, H2 } from '../../compone
 import PriceVariantPicker from './PriceVariantPicker/PriceVariantPicker';
 import SubmitFinePrint from './SubmitFinePrint/SubmitFinePrint';
 
+import { isNightlyUnitType, monthlyPriceFromNightly } from '../../util/monthlyPrice';
+
 import css from './OrderPanel.module.css';
 
 const BookingTimeForm = loadable(() =>
@@ -145,6 +147,9 @@ const PriceMaybe = props => {
     showCurrencyMismatch = false,
   } = props;
   const { listingType, unitType } = publicData || {};
+  // MOVE : les annonces "night" affichent un prix par mois (nuit x 30)
+  const isNightly = isNightlyUnitType(unitType);
+  const displayedPrice = isNightly && price ? monthlyPriceFromNightly(price) : price;
 
   const foundListingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
   const showPrice = displayPrice(foundListingTypeConfig);
@@ -156,13 +161,17 @@ const PriceMaybe = props => {
   }
 
   // Get formatted price or currency code if the currency does not match with marketplace currency
-  const { formattedPrice, priceTitle } = priceData(price, marketplaceCurrency, intl);
+  const { formattedPrice, priceTitle } = priceData(displayedPrice, marketplaceCurrency, intl);
   const priceValue = (
-    <span className={css.priceValue}>{formatMoneyIfSupportedCurrency(price, intl)}</span>
+    <span className={css.priceValue}>{formatMoneyIfSupportedCurrency(displayedPrice, intl)}</span>
   );
   const pricePerUnit = (
     <span className={css.perUnit}>
-      <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+      {isNightly ? (
+        <FormattedMessage id="OrderPanel.perMonth" />
+      ) : (
+        <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+      )}
     </span>
   );
 
@@ -177,7 +186,11 @@ const PriceMaybe = props => {
         />
       </div>
       <div className={css.perUnitInCTA}>
-        <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+        {isNightly ? (
+          <FormattedMessage id="OrderPanel.perMonth" />
+        ) : (
+          <FormattedMessage id="OrderPanel.perUnit" values={{ unitType }} />
+        )}
       </div>
     </div>
   ) : (

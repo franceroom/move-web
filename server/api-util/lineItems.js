@@ -95,11 +95,21 @@ const getHourQuantityAndLineItems = orderData => {
  * @param {number} [orderData.seats]
  * @param {'line-item/day' | 'line-item/night'} code
  */
+// MOVE (France Room) : minimum de sejour impose cote serveur (30 nuits = 1 mois).
+const MIN_BOOKING_NIGHTS = 30;
+
 const getDateRangeQuantityAndLineItems = (orderData, code) => {
   const { bookingStart, bookingEnd, seats } = orderData;
   const hasSeats = !!seats;
   const units =
     bookingStart && bookingEnd ? calculateQuantityFromDates(bookingStart, bookingEnd, code) : null;
+
+  if (units != null && units < MIN_BOOKING_NIGHTS) {
+    const error = new Error(`Minimum stay is ${MIN_BOOKING_NIGHTS} nights (1 month).`);
+    error.status = 400;
+    error.statusText = 'minimum-stay-not-met';
+    throw error;
+  }
 
   // If there are seats, the quantity is split to factors: units and seats.
   // E.g. 3 nights x 4 seats (aka unit price is multiplied by 12)

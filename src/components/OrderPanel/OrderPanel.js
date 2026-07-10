@@ -198,6 +198,14 @@ const PriceMaybe = props => {
       <p className={css.price}>
         <FormattedMessage id="OrderPanel.price" values={{ priceValue, pricePerUnit }} />
       </p>
+      {Number.parseFloat(publicData?.frais_menage) > 0 ? (
+        <p className={css.perUnit}>
+          <FormattedMessage
+            id="OrderPanel.fraisMenage"
+            values={{ amount: Number.parseFloat(publicData.frais_menage) }}
+          />
+        </p>
+      ) : null}
     </div>
   );
 };

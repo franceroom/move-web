@@ -739,6 +739,7 @@
   "OrderPanel.ctaButtonMessageNoStock": "Rupture de stock",
   "OrderPanel.ctaButtonMessagePurchase": "Acheter",
   "OrderPanel.ctaButtonMessageRequestAQuote": "Demander un devis",
+  "OrderPanel.fraisMenage": "+ {amount} € de frais de ménage (par séjour)",
   "OrderPanel.listingCurrencyInvalid": "Oups, la devise de l'annonce ne correspond pas à la devise de la place de marché.",
   "OrderPanel.listingPriceMissing": "Oups, cette annonce n'a pas de prix.",
   "OrderPanel.listingPriceVariantsAreInvalid": "Oups, le prix de cette annonce n'est pas défini correctement. Veuillez contacter l'assistance.",

@@ -13,5 +13,9 @@ export const NIGHTS_PER_MONTH = 30;
 
 export const isNightlyUnitType = unitType => unitType === 'night';
 
+// Arrondi a l'euro pour l'affichage (les prix nuit = loyer/30 creent des centimes).
+// Le detail exact (nuit x nombre de nuits) reste visible au checkout.
 export const monthlyPriceFromNightly = price =>
-  price ? new Money(price.amount * NIGHTS_PER_MONTH, price.currency) : null;
+  price
+    ? new Money(Math.round((price.amount * NIGHTS_PER_MONTH) / 100) * 100, price.currency)
+    : null;

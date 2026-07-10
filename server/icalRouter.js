@@ -170,16 +170,29 @@ const exportHandler = async (req, res) => {
     // On remonte 60 jours en arriere pour couvrir les sejours en cours.
     const start = new Date(now.getTime() - 60 * DAY_MS);
 
-    const json = await apiGet('/bookings/query', {
-      listingId,
-      start: start.toISOString(),
-      end: horizon.toISOString(),
-      states: 'pending,proposed,accepted',
-      perPage: 100,
-    });
-    const bookings = (json.data || []).filter(b =>
-      ['pending', 'proposed', 'accepted'].includes(b.attributes.state)
-    );
+    // NB : l'Integration API n'expose pas /bookings/query — on passe par les
+    // transactions de l'annonce avec include=booking.
+    const bookings = [];
+    let page = 1;
+    for (;;) {
+      const json = await apiGet('/transactions/query', {
+        listingId,
+        include: 'booking',
+        perPage: 100,
+        page,
+      });
+      for (const inc of json.included || []) {
+        if (inc.type !== 'booking') continue;
+        const st = inc.attributes.state;
+        const bEnd = new Date(inc.attributes.end);
+        if (!['pending', 'proposed', 'accepted'].includes(st)) continue;
+        if (bEnd < start || new Date(inc.attributes.start) > horizon) continue;
+        bookings.push(inc);
+      }
+      const totalPages = json.meta && json.meta.totalPages;
+      if (!totalPages || page >= totalPages || page >= 10) break;
+      page++;
+    }
 
     const lines = [
       'BEGIN:VCALENDAR',

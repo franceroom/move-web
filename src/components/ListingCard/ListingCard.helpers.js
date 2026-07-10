@@ -2,6 +2,7 @@ import { displayPrice, isPriceVariationsEnabled } from '../../util/configHelpers
 import { formatMoney } from '../../util/currency';
 import { richText } from '../../util/richText';
 import { isBookingProcessAlias } from '../../transactions/transaction';
+import { isNightlyUnitType, monthlyPriceFromNightly } from '../../util/monthlyPrice';
 
 import css from './ListingCard.module.css';
 
@@ -56,7 +57,10 @@ export const getListingCardTranslations = (listing, config, intl) => {
   const listingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
 
   const showPrice = displayPrice(listingTypeConfig);
-  const { formattedPrice, priceTooltip } = priceData(price, config.currency, intl);
+  // MOVE : les annonces "night" affichent un prix par mois (nuit x 30)
+  const isNightly = isNightlyUnitType(publicData?.unitType);
+  const displayedPrice = isNightly ? monthlyPriceFromNightly(price) : price;
+  const { formattedPrice, priceTooltip } = priceData(displayedPrice, config.currency, intl);
 
   const isPriceVariationsInUse = isPriceVariationsEnabled(publicData, listingTypeConfig);
   const hasMultiplePriceVariants = isPriceVariationsInUse && publicData?.priceVariants?.length > 1;
@@ -67,7 +71,9 @@ export const getListingCardTranslations = (listing, config, intl) => {
     : 'ListingCard.price';
 
   const perUnitString = isBookable
-    ? intl.formatMessage({ id: 'ListingCard.perUnit' }, { unitType: publicData?.unitType })
+    ? isNightly
+      ? intl.formatMessage({ id: 'ListingCard.perMonth' })
+      : intl.formatMessage({ id: 'ListingCard.perUnit' }, { unitType: publicData?.unitType })
     : '';
 
   // Single formatted price line (amount + per-unit if applicable); used for both card aria and price block

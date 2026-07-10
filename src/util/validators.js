@@ -126,6 +126,19 @@ export const bookingDatesRequired = (inValidStartDateMessage, inValidEndDateMess
   }
 };
 
+// MOVE (France Room) : duree minimale de sejour en nuits.
+export const bookingDatesMinNights = (message, minNights) => value => {
+  const startDateIsValid = value && value.startDate instanceof Date;
+  const endDateIsValid = value && value.endDate instanceof Date;
+  if (!startDateIsValid || !endDateIsValid) {
+    // bookingDatesRequired handles missing dates
+    return VALID;
+  }
+  const millisPerDay = 24 * 60 * 60 * 1000;
+  const nights = Math.round((value.endDate.getTime() - value.startDate.getTime()) / millisPerDay);
+  return nights >= minNights ? VALID : message;
+};
+
 // Source: http://www.regular-expressions.info/email.html
 // See the link above for an explanation of the tradeoffs.
 const EMAIL_RE = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;

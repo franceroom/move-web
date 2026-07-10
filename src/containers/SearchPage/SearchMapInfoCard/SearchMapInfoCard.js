@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import { useIntl } from '../../../util/reactIntl';
 import { propTypes } from '../../../util/types';
 import { formatMoney } from '../../../util/currency';
+import { isNightlyUnitType, monthlyPriceFromNightly } from '../../../util/monthlyPrice';
 import { ensureListing } from '../../../util/data';
 import { isPriceVariationsEnabled, requireListingImage } from '../../../util/configHelpers';
 
@@ -15,7 +16,11 @@ import css from './SearchMapInfoCard.module.css';
 const ListingCard = props => {
   const { className, clickHandler, intl, isInCarousel, listing, urlToListing, config } = props;
 
-  const { title, price, publicData } = listing.attributes;
+  const { title, price: rawPrice, publicData } = listing.attributes;
+  // MOVE : prix mensuel pour les annonces "night"
+  const price = isNightlyUnitType(listing.attributes.publicData?.unitType)
+    ? monthlyPriceFromNightly(rawPrice)
+    : rawPrice;
   const { cardStyle } = publicData || {};
   const formattedPrice =
     price && price.currency === config.currency
@@ -34,10 +39,9 @@ const ListingCard = props => {
     ? Object.keys(firstImage?.attributes?.variants).filter(k => k.startsWith(variantPrefix))
     : [];
 
-  const pricePerUnit = intl.formatMessage(
-    { id: 'SearchMapInfoCard.perUnit' },
-    { unitType: publicData?.unitType }
-  );
+  const pricePerUnit = isNightlyUnitType(publicData?.unitType)
+    ? intl.formatMessage({ id: 'SearchMapInfoCard.perMonth' })
+    : intl.formatMessage({ id: 'SearchMapInfoCard.perUnit' }, { unitType: publicData?.unitType });
   const priceValue = formattedPrice ? formattedPrice : '';
 
   const validListingTypes = config.listing.listingTypes;

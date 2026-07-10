@@ -239,9 +239,28 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
 
   // Let's keep the base price (order) as first line item and provider and customer commissions as last.
   // Note: the order matters only if OrderBreakdown component doesn't recognize line-item.
+  // MOVE (France Room) : frais de menage par sejour (publicData.frais_menage, en euros).
+  // Factures au locataire UNIQUEMENT ('customer') : ils n'entrent ni dans le versement
+  // au proprietaire ni dans l'assiette de la commission (calculee sur la ligne loyer).
+  // Ex : loyer 1000 + menage 150 -> locataire paie 1150, proprietaire recoit 850 (15%),
+  // France Room garde 150 (commission) + 150 (menage).
+  const fraisMenage = Number.parseFloat(publicData.frais_menage);
+  const fraisMenageLineItems =
+    Number.isFinite(fraisMenage) && fraisMenage > 0
+      ? [
+          {
+            code: 'line-item/frais-de-menage',
+            unitPrice: new Money(Math.round(fraisMenage * 100), currency),
+            quantity: 1,
+            includeFor: ['customer'],
+          },
+        ]
+      : [];
+
   const lineItems = [
     order,
     ...extraLineItems,
+    ...fraisMenageLineItems,
     ...getProviderCommissionMaybe(providerCommission, order, currency),
     ...getCustomerCommissionMaybe(customerCommission, order, currency),
   ];

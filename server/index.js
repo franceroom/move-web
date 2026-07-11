@@ -37,6 +37,7 @@ const passport = require('passport');
 const auth = require('./auth');
 const apiRouter = require('./apiRouter');
 const icalRouter = require('./icalRouter');
+const depositRouter = require('./depositRouter');
 const wellKnownRouter = require('./wellKnownRouter');
 const webmanifestResourceRoute = require('./resources/webmanifest');
 const robotsTxtRoute = require('./resources/robotsTxt');
@@ -107,6 +108,10 @@ app.use(
     },
   })
 );
+
+// MOVE (France Room) : depot de garantie (lot 8). Monte AVANT le body-parser
+// CSP pour que le webhook Stripe recoive le corps brut (verif. de signature).
+app.use('/deposit', depositRouter);
 
 if (cspEnabled) {
   app.use(generateCSPNonce);

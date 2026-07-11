@@ -298,6 +298,75 @@ const useUploadNavigationBlock = (isBlockNavigation, history, message) => {
  * @param {Array<propTypes.transition>} props.nextTransitions - The next transitions
  * @returns {JSX.Element}
  */
+
+// MOVE (France Room) : bandeau depot de garantie (lot 8).
+// Affiche au locataire, quand l'annonce definit publicData.depot_garantie,
+// l'etat de la caution (metadata.deposit, ecrite par server/depositRouter.js)
+// et le lien de paiement Stripe Checkout du compte cautions.
+const DepositBanner = props => {
+  const { transaction, listing, booking, isCustomerRole } = props;
+  const txId = transaction?.id?.uuid;
+  const depositAmount = Number.parseFloat(listing?.attributes?.publicData?.depot_garantie);
+  if (!txId || !booking?.id || !isCustomerRole || !(depositAmount > 0)) return null;
+
+  const deposit = transaction?.attributes?.metadata?.deposit;
+  const status = deposit?.status;
+  const base = {
+    margin: '16px 24px 0 24px',
+    padding: '12px 16px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    lineHeight: '20px',
+  };
+  if (status === 'litige' || status === 'erreur_remboursement') return null;
+  if (status === 'paye') {
+    return (
+      <div style={{ ...base, background: '#e9f7ee', border: '1px solid #4caf50' }}>
+        <FormattedMessage id="TransactionPage.depositPaid" values={{ amount: deposit.amount }} />
+      </div>
+    );
+  }
+  if (status === 'rembourse') {
+    return (
+      <div style={{ ...base, background: '#eef3fb', border: '1px solid #90b4e8' }}>
+        <FormattedMessage id="TransactionPage.depositRefunded" values={{ amount: deposit.amount }} />
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{
+        ...base,
+        background: '#fff8e0',
+        border: '1px solid #FECE16',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+      }}
+    >
+      <span>
+        <FormattedMessage id="TransactionPage.depositDue" values={{ amount: depositAmount }} />
+      </span>
+      <a
+        href={`/deposit/pay/${txId}`}
+        style={{
+          background: '#FECE16',
+          color: '#231F20',
+          padding: '8px 16px',
+          borderRadius: '4px',
+          fontWeight: 600,
+          textDecoration: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <FormattedMessage id="TransactionPage.depositPayButton" />
+      </a>
+    </div>
+  );
+};
+
 export const TransactionPageComponent = props => {
   const [isDisputeModalOpen, setDisputeModalOpen] = useState(false);
   const [disputeSubmitted, setDisputeSubmitted] = useState(false);
@@ -982,7 +1051,17 @@ export const TransactionPageComponent = props => {
       scrollingDisabled={scrollingDisabled}
     >
       <LayoutSingleColumn topbar={<TopbarContainer />} footer={<FooterContainer />}>
-        <div className={css.root}>{panel}</div>
+        <div className={css.root}>
+          {isDataAvailable ? (
+            <DepositBanner
+              transaction={transaction}
+              listing={listing}
+              booking={booking}
+              isCustomerRole={isCustomerRole}
+            />
+          ) : null}
+          {panel}
+        </div>
         <ReviewModal
           id="ReviewOrderModal"
           isOpen={isReviewModalOpen}

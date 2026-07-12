@@ -253,34 +253,38 @@ const payHandler = async (req, res) => {
 // --------------------------------------------------------------------------
 
 // Vérification de signature Stripe (header Stripe-Signature: t=...,v1=...).
+// NB : le header peut contenir PLUSIEURS v1 (rotation de secret) — on les teste tous.
 const verifyStripeSignature = (rawBody, header, secret, toleranceSec = 600) => {
-  if (!header || !secret) return false;
-  const parts = Object.fromEntries(
-    header.split(',').map(kv => {
-      const i = kv.indexOf('=');
-      return [kv.slice(0, i).trim(), kv.slice(i + 1)];
-    })
-  );
-  const t = parts.t;
-  const v1 = parts.v1;
-  if (!t || !v1) return false;
-  if (Math.abs(Date.now() / 1000 - Number(t)) > toleranceSec) return false;
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(`${t}.${rawBody}`)
-    .digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1));
-  } catch (_) {
-    return false;
+  if (!header || !secret) return { ok: false, why: 'header ou secret manquant' };
+  const items = header.split(',').map(s => s.trim());
+  const t = (items.find(s => s.startsWith('t=')) || '').slice(2);
+  const v1s = items.filter(s => s.startsWith('v1=')).map(s => s.slice(3));
+  if (!t || !v1s.length) return { ok: false, why: 'header sans t/v1' };
+  if (Math.abs(Date.now() / 1000 - Number(t)) > toleranceSec) {
+    return { ok: false, why: 'timestamp hors tolérance' };
   }
+  const payload = Buffer.concat([Buffer.from(`${t}.`), Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody))]);
+  const expected = crypto.createHmac('sha256', secret.trim()).update(payload).digest('hex');
+  for (const v1 of v1s) {
+    try {
+      if (crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1))) return { ok: true };
+    } catch (_) {
+      /* longueurs différentes */
+    }
+  }
+  return { ok: false, why: `aucune des ${v1s.length} signature(s) v1 ne correspond` };
 };
 
 const webhookHandler = async (req, res) => {
   const rawBody = req.body; // Buffer (express.raw)
   const sig = req.headers['stripe-signature'];
-  if (!verifyStripeSignature(rawBody, sig, WEBHOOK_SECRET)) {
-    console.error('[deposit webhook] signature invalide');
+  const check = verifyStripeSignature(rawBody, sig, WEBHOOK_SECRET);
+  if (!check.ok) {
+    // Diagnostic sans jamais logguer le secret lui-même.
+    const secretLooksRight = /^whsec_/.test((WEBHOOK_SECRET || '').trim());
+    console.error(
+      `[deposit webhook] signature invalide (${check.why}) — DEPOSIT_WEBHOOK_SECRET commence par whsec_: ${secretLooksRight}, corps Buffer: ${Buffer.isBuffer(rawBody)}`
+    );
     return res.status(400).send('Invalid signature');
   }
   let event;
